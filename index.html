@@ -10,17 +10,14 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
 
 .earth-bg{position:fixed;inset:0;z-index:1}
 .earth-bg iframe{width:100%;height:100%;border:none;pointer-events:none}
-
 .pi-layer{position:fixed;inset:0;z-index:2;pointer-events:none;transform-origin:top left}
 
-/* ── HUD ── */
-.hud{
-  position:fixed;top:12px;left:50%;transform:translateX(-50%);
-  z-index:100;display:flex;gap:8px;align-items:center;
-  background:rgba(0,0,0,0.75);border:1px solid rgba(255,255,255,0.08);
-  border-radius:8px;padding:7px 14px;pointer-events:all;white-space:nowrap;
-}
-.hl{font-size:9px;color:#444;letter-spacing:.1em;font-family:'Share Tech Mono',monospace}
+/* HUD */
+.hud{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:100;
+  display:flex;gap:8px;align-items:center;background:rgba(0,0,0,0.75);
+  border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px 14px;
+  pointer-events:all;white-space:nowrap;}
+.hl{font-size:9px;color:#444;letter-spacing:.1em}
 .hb{background:none;border:1px solid #222;border-radius:4px;color:#333;
   font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 9px;
   cursor:pointer;letter-spacing:.06em;transition:all .15s}
@@ -28,100 +25,110 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
 .hb.on{border-color:#ff2d6b;color:#ff2d6b}
 .hsep{width:1px;height:14px;background:#1a1a1a;margin:0 4px}
 
-/* ── 翻牌板：垂直置中偏上 ── */
+/* 翻牌板 */
 .board-wrap{
-  position:fixed;
-  top:50%;left:50%;
-  transform:translate(-50%, -56%);
-  width:1270px;
-  z-index:10;
-  pointer-events:all;
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-54%);
+  width:1300px;z-index:10;pointer-events:all;
 }
 .board{
   background:rgba(10,10,8,0.65);
   border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;
-  padding:16px 20px 14px;
-  backdrop-filter:blur(3px);
-  -webkit-backdrop-filter:blur(3px);
+  border-radius:10px;padding:0;overflow:hidden;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
 }
 
 /* ── Topbar ── */
 .topbar{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:13px;
-  position:relative;
+  display:flex;align-items:stretch;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  min-height:56px;
 }
-.live-badge{display:flex;align-items:center;gap:7px}
-.live-dot{width:7px;height:7px;border-radius:50%;background:#ff2d6b;
-  animation:blink 1.4s ease-in-out infinite;flex-shrink:0}
-.live-text{font-size:13px;color:#888;letter-spacing:.14em}
 
-/* Logo 置中 */
-.logo-center{
-  position:absolute;left:50%;transform:translateX(-50%);
-  display:flex;align-items:center;
+/* 左側：紅點 + LIVE + logo */
+.topbar-left{
+  display:flex;align-items:center;gap:10px;
+  padding:0 20px;
+  border-right:1px solid rgba(255,255,255,0.07);
+  flex-shrink:0;
 }
-.logo-wm{
-  font-family:'Share Tech Mono',monospace;
-  font-size:22px;font-weight:700;
-  color:#fff;letter-spacing:.02em;line-height:1;
-}
-.logo-sep{color:rgba(255,255,255,0.35);margin:0 4px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#ff2d6b;
+  animation:blink 1.4s ease-in-out infinite;flex-shrink:0}
+.live-text{font-size:12px;color:#888;letter-spacing:.16em;font-weight:700}
+.logo-sep-bar{width:1px;height:18px;background:rgba(255,255,255,0.15);margin:0 2px}
+.logo-wm{font-size:20px;font-weight:700;color:#fff;letter-spacing:.04em;line-height:1}
+.logo-colon{color:rgba(255,255,255,0.3);margin:0 3px}
 .logo-inf{color:#ff2d6b}
 
-.clk{font-size:15px;color:#fff;letter-spacing:.18em;font-weight:700}
+/* 中間：π 位數（重要資訊，大字） */
+.topbar-mid{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:16px;
+  padding:0 20px;
+}
+.pi-digits-label{font-size:11px;color:#4a9eff;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.pi-digits-val{font-size:18px;color:#fff;letter-spacing:.06em;font-weight:700}
+
+/* 右側：時鐘 */
+.topbar-right{
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:0 20px;
+  border-left:1px solid rgba(255,255,255,0.07);
+  flex-shrink:0;
+}
+.clk{font-size:16px;color:#fff;letter-spacing:.2em;font-weight:700}
 
 /* ── 格子 ── */
-.grid{display:grid;grid-template-columns:repeat(22,1fr);gap:4px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(22,1fr);gap:3px;padding:14px 14px 0}
 .cell{
-  aspect-ratio:.72;position:relative;border-radius:4px;overflow:hidden;
-  background:rgba(20,20,18,0.72);
-  border-top:1px solid rgba(60,60,55,0.5);
-  border-bottom:1px solid rgba(0,0,0,0.4);
+  aspect-ratio:.65;position:relative;border-radius:3px;overflow:hidden;
+  background:rgba(18,18,16,0.75);
+  border-top:1px solid rgba(55,55,50,0.6);
+  border-bottom:1px solid rgba(0,0,0,0.5);
   display:flex;flex-direction:column;
 }
 .half-top{
   flex:1;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;
-  background:rgba(22,22,20,0.72);transform-origin:bottom center;
+  background:rgba(20,20,18,0.75);transform-origin:bottom center;
 }
 .half-bot{
   flex:1;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;
-  background:rgba(16,16,14,0.68);border-top:1px solid rgba(0,0,0,0.5);
+  background:rgba(14,14,12,0.72);border-top:1px solid rgba(0,0,0,0.6);
 }
-.half-top .n{font-size:clamp(16px,2vw,28px);font-weight:700;color:#fff;transform:translateY(50%);display:block;line-height:1}
-.half-bot .n{font-size:clamp(16px,2vw,28px);font-weight:700;color:#ccc;transform:translateY(-50%);display:block;line-height:1}
+.half-top .n{font-size:clamp(18px,2.2vw,32px);font-weight:700;color:#fff;transform:translateY(52%);display:block;line-height:1}
+.half-bot .n{font-size:clamp(18px,2.2vw,32px);font-weight:700;color:#ccc;transform:translateY(-52%);display:block;line-height:1}
 
-/* ── 底部資訊列：Sen 風格 ── */
+/* ── 底部資訊列 ── */
 .info-bar{
   display:flex;align-items:stretch;
-  gap:1px;
   margin-top:10px;
-  border-radius:6px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,0.07);
+  border-top:1px solid rgba(255,255,255,0.07);
 }
 .info-cell{
-  flex:1;
-  background:rgba(8,8,10,0.85);
-  padding:7px 12px;
-  display:flex;flex-direction:column;gap:3px;
+  flex:1;background:rgba(6,6,8,0.9);
+  padding:10px 14px;display:flex;flex-direction:column;gap:5px;
 }
 .info-cell:not(:last-child){border-right:1px solid rgba(255,255,255,0.06)}
-.info-label{
-  font-size:9px;color:#4a9eff;letter-spacing:.12em;text-transform:uppercase;
-}
-.info-value{
-  font-size:13px;color:#fff;letter-spacing:.08em;font-weight:700;
-}
-.info-value.dim{color:#888;font-weight:400}
+.info-label{font-size:10px;color:#4a9eff;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
 
-/* vis bar */
-.vis-wrap{display:flex;align-items:center;gap:8px;flex:2}
-.vis{display:flex;align-items:flex-end;gap:2px;height:20px;flex:1}
-.vbar{flex:1;border-radius:1px 1px 0 0;background:#4a9eff;opacity:.2;min-height:2px;transition:height .09s,opacity .09s}
-.status-dot{width:5px;height:5px;border-radius:50%;background:#444;flex-shrink:0}
-.status-dot.on{background:#4a9eff;animation:blink 2s ease-in-out infinite}
+/* BPM 時段曲線 */
+.bpm-curve-wrap{position:relative;height:32px;display:flex;align-items:flex-end}
+.bpm-val{font-size:16px;color:#fff;letter-spacing:.06em;font-weight:700;white-space:nowrap}
+.bpm-mood{font-size:10px;color:#666;letter-spacing:.08em;margin-left:8px;align-self:flex-end;padding-bottom:2px}
+canvas#bpm-curve{position:absolute;inset:0;width:100%;height:100%}
+
+/* 琴鍵白色 bar */
+.piano-keys{
+  display:flex;align-items:flex-end;gap:3px;height:32px;flex:1;
+}
+.pkey{
+  flex:1;border-radius:2px 2px 0 0;
+  background:#fff;opacity:.12;min-height:3px;
+  transition:height .09s ease,opacity .09s ease;
+}
+.status-row{display:flex;align-items:center;gap:8px;margin-top:2px}
+.sdot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0;transition:background .3s}
+.sdot.on{background:#4a9eff;animation:blink 2s ease-in-out infinite}
+.status-txt{font-size:11px;color:#555;letter-spacing:.08em}
 </style>
 </head>
 <body>
@@ -137,43 +144,52 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
   <div class="board-wrap">
     <div class="board">
 
+      <!-- Topbar -->
       <div class="topbar">
-        <div class="live-badge">
+        <div class="topbar-left">
           <div class="live-dot"></div>
           <span class="live-text">LIVE</span>
+          <div class="logo-sep-bar"></div>
+          <span class="logo-wm">π<span class="logo-colon"> : </span>radi<span class="logo-inf">∞</span></span>
         </div>
-        <div class="logo-center">
-          <span class="logo-wm">π<span class="logo-sep"> : </span>radi<span class="logo-inf">∞</span></span>
+        <div class="topbar-mid">
+          <span class="pi-digits-label">π sequence</span>
+          <span class="pi-digits-val" id="prange">digits 1 – 88</span>
         </div>
-        <div class="clk" id="clk">00:00:00</div>
+        <div class="topbar-right">
+          <div class="clk" id="clk">00:00:00</div>
+        </div>
       </div>
 
+      <!-- 翻牌格子 -->
       <div class="grid" id="grid"></div>
 
-      <!-- Sen 風格底部資訊列 -->
+      <!-- 底部資訊列 -->
       <div class="info-bar">
-        <div class="info-cell" style="flex:2">
-          <div class="info-label">π sequence</div>
-          <div class="info-value" id="prange">digits 1–88</div>
-        </div>
-        <div class="info-cell">
+
+        <!-- BPM + 時段曲線 -->
+        <div class="info-cell" style="flex:3;position:relative">
           <div class="info-label">tempo</div>
-          <div class="info-value" id="bpmv">-- BPM</div>
-        </div>
-        <div class="info-cell">
-          <div class="info-label">mood</div>
-          <div class="info-value dim" id="mood">--</div>
-        </div>
-        <div class="info-cell" style="flex:2">
-          <div class="info-label">π music</div>
-          <div class="vis-wrap">
-            <div class="status-dot" id="sdot"></div>
-            <div class="vis" id="vis"></div>
-            <div class="info-value dim" id="status">loading</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span class="bpm-val" id="bpmv">-- BPM</span>
+            <span class="bpm-mood" id="mood">--</span>
+          </div>
+          <div class="bpm-curve-wrap" style="margin-top:4px;height:28px">
+            <canvas id="bpm-curve" width="300" height="28"></canvas>
           </div>
         </div>
-      </div>
 
+        <!-- π music 琴鍵 bar -->
+        <div class="info-cell" style="flex:4">
+          <div class="info-label">π music</div>
+          <div class="piano-keys" id="pkeys"></div>
+          <div class="status-row">
+            <div class="sdot" id="sdot"></div>
+            <span class="status-txt" id="status">click to start</span>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 </div>
@@ -200,8 +216,7 @@ function scaleOverlay(){
   const layer=document.getElementById('pilayer');
   const scale=Math.min(window.innerWidth/1920,window.innerHeight/1080);
   layer.style.transform=`scale(${scale})`;
-  layer.style.width='1920px';
-  layer.style.height='1080px';
+  layer.style.width='1920px';layer.style.height='1080px';
   layer.style.transformOrigin='top left';
   layer.style.left=((window.innerWidth-1920*scale)/2)+'px';
   layer.style.top=((window.innerHeight-1080*scale)/2)+'px';
@@ -222,6 +237,52 @@ function setSrc(id,btn){
   document.getElementById('bgf').src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1`;
   document.querySelectorAll('.hb').forEach(b=>{if(['Sen ISS','NASA TV'].includes(b.textContent))b.classList.remove('on');});
   btn.classList.add('on');
+}
+
+// 建立琴鍵 bar（22 鍵，對應 22 列）
+const pkeysEl=document.getElementById('pkeys');
+const pkeys=[];
+for(let i=0;i<22;i++){
+  const k=document.createElement('div');k.className='pkey';
+  pkeysEl.appendChild(k);pkeys.push(k);
+}
+
+// BPM 曲線（24小時，cosine，正午最快）
+function drawBpmCurve(){
+  const canvas=document.getElementById('bpm-curve');
+  if(!canvas) return;
+  const W=canvas.offsetWidth||300,H=28;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const BPM_MAX=96,BPM_MIN=42,PEAK=12;
+  // 曲線
+  ctx.beginPath();
+  for(let px=0;px<W;px++){
+    const h=px/W*24;
+    const t=(Math.cos(((h-PEAK)/12)*Math.PI)+1)/2;
+    const bpm=BPM_MIN+(BPM_MAX-BPM_MIN)*t;
+    const y=H-2-(bpm-BPM_MIN)/(BPM_MAX-BPM_MIN)*(H-4);
+    px===0?ctx.moveTo(px,y):ctx.lineTo(px,y);
+  }
+  ctx.strokeStyle='rgba(74,158,255,0.3)';ctx.lineWidth=1.5;ctx.stroke();
+  // 填色
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle='rgba(74,158,255,0.08)';ctx.fill();
+  // 現在位置
+  const now=new Date(),h=now.getHours()+now.getMinutes()/60;
+  const px=h/24*W;
+  const t=(Math.cos(((h-PEAK)/12)*Math.PI)+1)/2;
+  const bpm=BPM_MIN+(BPM_MAX-BPM_MIN)*t;
+  const y=H-2-(bpm-BPM_MIN)/(BPM_MAX-BPM_MIN)*(H-4);
+  ctx.beginPath();ctx.arc(px,y,3.5,0,Math.PI*2);
+  ctx.fillStyle='#4a9eff';ctx.fill();
+  // 時間軸標籤
+  ctx.font='8px Share Tech Mono,monospace';
+  ctx.fillStyle='rgba(255,255,255,0.18)';
+  ['0','6','12','18'].forEach((label,i)=>{
+    ctx.fillText(label,i/4*W+(i===0?1:-4),H-1);
+  });
 }
 
 // π overlay 主程式
@@ -261,40 +322,74 @@ for(let i=0;i<TOTAL;i++){
   hb.appendChild(nb);
   cell.appendChild(ht); cell.appendChild(hb);
   gridEl.appendChild(cell);
-  cells.push({cell,ht,hb,nt,nb,cur:PI[i%PI.length],ft:null});
+  cells.push({cell,ht,hb,nt,nb,cur:PI[i%PI.length],ft:null,queue:[],running:false});
 }
 
-function flipTo(cd,val,dur,onDone){
+
+function flipTo_cb(cd, val, dur, onDone){
+  cd.queue = [];
+  cd.running = false;
   clearTimeout(cd.ft);
-  const half=Math.max(dur/2,18);
-  cd.ht.style.transition=`transform ${half}ms ease-in`;
-  cd.ht.style.transform='scaleY(0)';
-  cd.ft=setTimeout(()=>{
-    cd.nt.textContent=val; cd.nb.textContent=val; cd.cur=String(val);
-    cd.ht.style.transition=`transform ${half}ms ease-out`;
-    cd.ht.style.transform='scaleY(1)';
-    cd.ft=setTimeout(()=>{if(onDone)onDone();},half);
-  },half);
+  flipOne(cd, val, dur, onDone);
 }
 
-function rollCell(cd,target){
-  const cur=parseInt(cd.cur)||0,tgt=parseInt(target);
-  const steps=((tgt-cur+10)%10)||10,stepMs=Math.floor(ROLL_MS/steps);
-  const flipDur=Math.min(stepMs*0.8,130);
-  for(let s=1;s<=steps;s++){
-    const to=String((cur+s)%10);
-    setTimeout(()=>flipTo(cd,to,flipDur,null),s*stepMs);
-  }
+function flipOne(cd, val, dur, onDone){
+  const half = Math.max(dur/2, 18);
+  cd.ht.style.transition = `transform ${half}ms ease-in`;
+  cd.ht.style.transform = 'scaleY(0)';
+  cd.ft = setTimeout(()=>{
+    cd.nt.textContent = val;
+    cd.nb.textContent = val;
+    cd.cur = String(val);
+    cd.ht.style.transition = `transform ${half}ms ease-out`;
+    cd.ht.style.transform = 'scaleY(1)';
+    cd.ft = setTimeout(()=>{
+      if(onDone) onDone();
+    }, half);
+  }, half);
 }
+
+function runQueue(cd){
+  if(cd.running || cd.queue.length===0) return;
+  cd.running = true;
+  const {val, dur} = cd.queue.shift();
+  flipOne(cd, val, dur, ()=>{
+    cd.running = false;
+    runQueue(cd);
+  });
+}
+
+function flipTo(cd, val, dur){
+  // 清掉舊佇列，只保留最新目標（中途換頁時不累積舊動畫）
+  cd.queue = [{val, dur}];
+  if(!cd.running) runQueue(cd);
+}
+
+function rollCell(cd, target){
+  const cur = parseInt(cd.cur)||0;
+  const tgt = parseInt(target);
+  const steps = ((tgt-cur+10)%10)||10;
+  const stepMs = Math.floor(ROLL_MS/steps);
+  const flipDur = Math.min(stepMs*0.75, 120);
+  // 把所有步驟加進佇列，嚴格排隊
+  cd.queue = [];
+  for(let s=1; s<=steps; s++){
+    cd.queue.push({val: String((cur+s)%10), dur: flipDur});
+  }
+  if(!cd.running) runQueue(cd);
+}
+
 
 function getPage(off){let s='';for(let i=0;i<TOTAL;i++)s+=PI[(off+i)%PI.length];return s;}
 
 function piTick(){
-  if(chiming)return;
+  if(chiming) return;
   piOffset=(piOffset+TOTAL)%PI.length;
-  const nd=getPage(piOffset); lastFlip=Date.now();
+  const nd=getPage(piOffset);
+  lastFlip=Date.now();
   cells.forEach((cd,i)=>rollCell(cd,nd[i]));
-  document.getElementById('prange').textContent=`π digits ${piOffset+1}–${piOffset+TOTAL}`;
+  const pr=document.getElementById('prange');
+  if(pr) pr.textContent=`π digits ${piOffset+1}–${piOffset+TOTAL}`;
 }
 
 function triggerChime(){
@@ -313,7 +408,7 @@ function triggerChime(){
       setTimeout(()=>flipTo(cd,String(cur+s),STEP_MS*0.85,null),s*STEP_MS);
     }
     setTimeout(()=>{
-      flipTo(cd,' ',STEP_MS*0.85,()=>{
+      flipTo_cb(cd,' ',STEP_MS*0.85,()=>{
         allBlack++;
         if(allBlack===TOTAL) showTime();
       });
@@ -328,7 +423,7 @@ function triggerChime(){
         const col=i%COLS,row=Math.floor(i/COLS);
         setTimeout(()=>{
           const val=layout[i];
-          if(val&&val.trim()) flipTo(cd,val,120,null);
+          if(val&&val.trim()) flipTo(cd,val,120);
           shown++;
           if(shown===TOTAL) waitReturn();
         },col*28+row*55);
@@ -343,9 +438,14 @@ function triggerChime(){
       cells.forEach((cd,i)=>{
         const col=i%COLS,row=Math.floor(i/COLS);
         setTimeout(()=>{
-          flipTo(cd,nd[i],110,null);
+          flipTo(cd,nd[i],110);
           back++;
-          if(back===TOTAL) setTimeout(()=>{chiming=false;},400);
+          if(back===TOTAL){
+          setTimeout(()=>{
+            chiming=false;
+            lastFlip=Date.now();
+          },400);
+        }
         },col*25+row*45);
       });
     },10000);
@@ -458,17 +558,38 @@ window.addEventListener('load',()=>{
 
 function frame(){
   const now=Date.now(),bpm=getBPM();
-  document.getElementById('pf').style.width=Math.min((now-lastFlip)/CYCLE*100,100)+'%';
-  document.getElementById('bpmv').textContent=bpm+' BPM';
-  document.getElementById('mood').textContent=getMood(bpm);
-  const d=new Date();
-  document.getElementById('clk').textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
+  const pfEl=document.getElementById('pf');
+  const bpmEl=document.getElementById('bpmv');
+  const moodEl=document.getElementById('mood');
+  const clkEl=document.getElementById('clk');
+  if(pfEl) pfEl.style.width=Math.min((now-lastFlip)/CYCLE*100,100)+'%';
+  if(bpmEl) bpmEl.textContent=bpm+' BPM';
+  if(moodEl) moodEl.textContent=getMood(bpm);
+  if(clkEl){
+    const d=new Date();
+    clkEl.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
+  }
   requestAnimationFrame(frame);
 }
 
-setInterval(piTick,CYCLE);
-setInterval(checkHour,1000);
-frame();
+// 確保 DOM 完全載入後才啟動
+window.addEventListener('load', function() {
+  // 重置所有狀態
+  chiming = false;
+  lastHour = -1;
+  piOffset = 0;
+  lastFlip = Date.now();
+
+  // 啟動翻牌
+  setInterval(piTick, CYCLE);
+  setInterval(checkHour, 1000);
+
+  // 立刻執行第一次翻牌（不要等 CYCLE 才開始）
+  setTimeout(piTick, 500);
+
+  // 啟動時鐘
+  frame();
+});
 
 // 覆寫 frame 函式，同步更新 clk2
 const _origFrame = frame;
@@ -483,6 +604,35 @@ function frame(){
   document.getElementById('clk2').textContent=ts;
   requestAnimationFrame(frame);
 }
+
+// 覆蓋 playNote 以驅動琴鍵（在原本的 playNote 之後加鉤子）
+const _origPlayNote=playNote;
+// 重新定義讓琴鍵亮起
+function playNote(digit,when,dur){
+  _origPlayNote(digit,when,dur);
+  // 琴鍵亮起：用 digit 決定哪根鍵最亮，周圍漸暗
+  const delay=Math.max(0,(when-(actx?actx.currentTime:0))*1000);
+  setTimeout(()=>{
+    pkeys.forEach((k,i)=>{
+      const dist=Math.abs(i-digit*2.2|0);
+      k.style.height=dist===0?'28px':dist===1?'18px':dist===2?'10px':'3px';
+      k.style.opacity=dist===0?'0.9':dist===1?'0.5':dist===2?'0.25':'0.08';
+    });
+  },delay);
+}
+
+// startMusic 後更新狀態
+const _origStartMusic=startMusic;
+function startMusic(){
+  _origStartMusic();
+  setTimeout(()=>{
+    document.getElementById('status').textContent='playing';
+    document.getElementById('sdot').classList.add('on');
+  },400);
+}
+
+drawBpmCurve();
+setInterval(drawBpmCurve,60000);
 </script>
 </body>
 </html>
