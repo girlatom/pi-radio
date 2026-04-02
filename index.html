@@ -12,10 +12,15 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
 .earth-bg iframe{width:100%;height:100%;border:none;pointer-events:none}
 .pi-layer{position:fixed;inset:0;z-index:2;pointer-events:none;transform-origin:top left}
 
-.hud{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:100;
+/* HUD — 上線時隱藏 */
+.hud{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:100;
   display:flex;gap:8px;align-items:center;background:rgba(0,0,0,0.75);
   border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px 14px;
-  pointer-events:all;white-space:nowrap;}
+  pointer-events:all;white-space:nowrap;
+  transition:opacity .3s;
+}
+.hud.hidden{opacity:0;pointer-events:none}
 .hl{font-size:9px;color:#444;letter-spacing:.1em}
 .hb{background:none;border:1px solid #222;border-radius:4px;color:#333;
   font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 9px;
@@ -24,6 +29,7 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
 .hb.on{border-color:#ff2d6b;color:#ff2d6b}
 .hsep{width:1px;height:14px;background:#1a1a1a;margin:0 4px}
 
+/* 翻牌板 */
 .board-wrap{
   position:fixed;top:50%;left:50%;
   transform:translate(-50%,-54%);
@@ -36,7 +42,7 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
 }
 
-/* Topbar：logo左，序列中，時鐘右 */
+/* Topbar */
 .topbar{
   display:flex;align-items:stretch;
   border-bottom:1px solid rgba(255,255,255,0.07);
@@ -48,20 +54,18 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
   border-right:1px solid rgba(255,255,255,0.07);
   flex-shrink:0;
 }
-/* logo */
 .logo-wm{font-size:22px;font-weight:700;color:#fff;letter-spacing:.04em;line-height:1}
 .logo-colon{color:rgba(255,255,255,0.3);margin:0 3px}
 .logo-inf{color:#ff2d6b}
-/* LIVE：紅點在前 */
 .live-badge{display:flex;align-items:center;gap:6px}
 .live-dot{width:8px;height:8px;border-radius:50%;background:#ff2d6b;
   animation:blink 1.4s ease-in-out infinite;flex-shrink:0}
 .live-txt{font-size:13px;font-weight:700;color:#aaa;letter-spacing:.16em}
 
+/* 中間：只顯示 π digits，不顯示 "π sequence" 標題 */
 .topbar-mid{
-  flex:1;display:flex;align-items:center;justify-content:center;gap:14px;padding:0 20px;
+  flex:1;display:flex;align-items:center;justify-content:center;padding:0 20px;
 }
-.pi-seq-label{font-size:14px;color:#fff;letter-spacing:.1em;opacity:.5}
 .pi-seq-val{font-size:20px;color:#fff;letter-spacing:.06em;font-weight:700}
 
 .topbar-right{
@@ -107,7 +111,6 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
   padding:12px 18px;display:flex;flex-direction:column;gap:4px;
 }
 .info-cell:not(:last-child){border-right:1px solid rgba(255,255,255,0.06)}
-/* 所有標籤改成白色，去掉藍色小字 */
 .info-label{font-size:14px;color:#fff;letter-spacing:.1em;font-weight:700;opacity:.5}
 .info-val{font-size:18px;color:#fff;letter-spacing:.06em;font-weight:700}
 .info-sub{font-size:14px;color:#888;letter-spacing:.06em}
@@ -118,13 +121,13 @@ canvas#bpm-curve{width:100%;height:100%;display:block}
 /* 琴鍵 */
 .pkeys-wrap{display:flex;align-items:flex-end;gap:2px;height:36px;margin-top:6px}
 .pkey{
-  flex:1;border-radius:2px 2px 0 0;
-  background:#fff;opacity:.1;min-height:3px;
+  flex:1;border-radius:2px 2px 0 0;background:#fff;
+  opacity:.08;min-height:3px;
   transition:height .07s ease,opacity .07s ease;
 }
 .status-row{display:flex;align-items:center;gap:8px;margin-top:4px}
 .sdot{width:6px;height:6px;border-radius:50%;background:#2a2a2a;flex-shrink:0;transition:all .3s}
-.sdot.on{background:#4a9eff;box-shadow:0 0 6px rgba(74,158,255,0.4)}
+.sdot.on{background:#fff;box-shadow:0 0 6px rgba(255,255,255,0.4)}
 .status-txt{font-size:12px;color:#555;letter-spacing:.08em;cursor:pointer}
 .status-txt:hover{color:#aaa}
 </style>
@@ -150,7 +153,6 @@ canvas#bpm-curve{width:100%;height:100%;display:block}
           </div>
         </div>
         <div class="topbar-mid">
-          <span class="pi-seq-label">π sequence</span>
           <span class="pi-seq-val" id="prange">digits 1 – 88</span>
         </div>
         <div class="topbar-right">
@@ -182,7 +184,8 @@ canvas#bpm-curve{width:100%;height:100%;display:block}
   </div>
 </div>
 
-<div class="hud">
+<!-- HUD：預設顯示，上線前手動隱藏或雙擊隱藏 -->
+<div class="hud" id="hud">
   <span class="hl">overlay</span>
   <button class="hb on" id="vtog" onclick="toggleVis()">visible</button>
   <div class="hsep"></div>
@@ -195,10 +198,11 @@ canvas#bpm-curve{width:100%;height:100%;display:block}
   <button class="hb" onclick="setSrc('BHACKCNDMW8',this)">NASA TV</button>
   <div class="hsep"></div>
   <button class="hb" onclick="triggerChime()" style="color:#444;border-color:#222">⏰ chime</button>
+  <div class="hsep"></div>
+  <button class="hb" onclick="toggleHud()" style="color:#444;border-color:#222">hide bar</button>
 </div>
 
 <script>
-// ── Scale overlay ──
 function scaleOverlay(){
   const layer=document.getElementById('pilayer');
   const scale=Math.min(window.innerWidth/1920,window.innerHeight/1080);
@@ -226,7 +230,16 @@ function setSrc(id,btn){
   btn.classList.add('on');
 }
 
-// ── 琴鍵（暴露為 window.pkeys）──
+// 隱藏 HUD（上線時用）
+let hudVisible=true;
+function toggleHud(){
+  hudVisible=!hudVisible;
+  document.getElementById('hud').classList.toggle('hidden',!hudVisible);
+}
+// 雙擊畫面也能切換 HUD
+document.addEventListener('dblclick',toggleHud);
+
+// 琴鍵
 const pkeysEl=document.getElementById('pkeys');
 window.pkeys=[];
 for(let i=0;i<22;i++){
@@ -234,7 +247,7 @@ for(let i=0;i<22;i++){
   pkeysEl.appendChild(k);window.pkeys.push(k);
 }
 
-// ── BPM 曲線 ──
+// BPM 曲線
 function drawBpmCurve(){
   const canvas=document.getElementById('bpm-curve');
   if(!canvas) return;
