@@ -77,7 +77,7 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
 /* 格子 */
 .grid{display:grid;grid-template-columns:repeat(22,1fr);gap:3px;padding:14px 14px 0}
 .cell{
-  aspect-ratio:.82;position:relative;border-radius:3px;overflow:hidden;
+  aspect-ratio:.78;position:relative;border-radius:3px;overflow:hidden;
   background:rgba(16,16,14,0.82);
   border-top:1px solid rgba(50,50,46,0.7);
   border-bottom:1px solid rgba(0,0,0,0.6);
@@ -92,12 +92,12 @@ html,body{width:100%;height:100vh;background:#000;overflow:hidden;font-family:'S
   background:rgba(12,12,10,0.78);border-top:1px solid rgba(0,0,0,0.7);
 }
 .half-top .n{
-  font-size:clamp(20px,2.6vw,38px);font-weight:700;color:#fff;
-  transform:translateY(54%);display:block;line-height:1;letter-spacing:-.02em;
+  font-size:clamp(24px,3.2vw,46px);font-weight:700;color:#fff;
+  transform:translateY(55%);display:block;line-height:1;letter-spacing:-.02em;
 }
 .half-bot .n{
-  font-size:clamp(20px,2.6vw,38px);font-weight:700;color:#bbb;
-  transform:translateY(-54%);display:block;line-height:1;letter-spacing:-.02em;
+  font-size:clamp(24px,3.2vw,46px);font-weight:700;color:#bbb;
+  transform:translateY(-55%);display:block;line-height:1;letter-spacing:-.02em;
 }
 
 /* 底部資訊列 */
@@ -280,7 +280,18 @@ setTimeout(drawBpmCurve,300);
 setInterval(drawBpmCurve,60000);
 
 // π overlay 主程式
-const PI="14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196444288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989";
+
+// π overlay 主程式
+
+// ── 廣播時間軸 ──
+const BROADCAST_EPOCH = new Date('2026-03-14T01:59:26Z').getTime();
+const BPM_SYNC = 72;
+
+function getSyncedStepIdx(){
+  const elapsed=Date.now()-BROADCAST_EPOCH;
+  if(elapsed<0) return 0;
+  return Math.floor(elapsed/(60000/BPM_SYNC))%PI.length;
+}
 
 const ROWS=4,COLS=22,TOTAL=ROWS*COLS,CYCLE=4000,ROLL_MS=2000;
 const PENTATONIC=[0,2,4,7,9,12,14,16,19,21];
@@ -289,20 +300,6 @@ const BASE_FREQ=220,BPM_MAX=96,BPM_MIN=42,PEAK_HOUR=12;
 let piOffset=0,lastFlip=Date.now();
 let chiming=false,lastHour=-1;
 let actx=null,revNode=null,mGain=null,playing=false,stepIdx=0,nxt=0,schedT=null;
-
-// ── 廣播時間軸同步 ──
-// 固定開播起點：2026-03-14 01:59:26 UTC（π Day 致敬）
-// 任何人任何時候進來，都從同一時間軸的正確位置開始
-const BROADCAST_EPOCH = new Date('2026-03-14T01:59:26Z').getTime();
-const BPM_SYNC = 72; // 同步計算用固定 BPM（不隨時間變動，確保位置精準）
-
-function getSyncedStepIdx() {
-  const now = Date.now();
-  const elapsedMs = now - BROADCAST_EPOCH;
-  if (elapsedMs < 0) return 0; // 開播前從頭開始
-  const msPerBeat = 60000 / BPM_SYNC;
-  return Math.floor(elapsedMs / msPerBeat) % PI.length;
-}
 
 const gridEl=document.getElementById('grid');
 const cells=[];
@@ -316,60 +313,44 @@ for(let i=0;i<TOTAL;i++){
   hb.appendChild(nb);
   cell.appendChild(ht); cell.appendChild(hb);
   gridEl.appendChild(cell);
-  cells.push({cell,ht,hb,nt,nb,cur:PI[i%PI.length],ft:null,queue:[],running:false});
-}
-
-
-function flipTo_cb(cd, val, dur, onDone){
-  cd.queue = [];
-  cd.running = false;
-  clearTimeout(cd.ft);
-  flipOne(cd, val, dur, onDone);
+  cells.push({cell,ht,hb,nt,nb,cur:"0",ft:null,queue:[],running:false});
 }
 
 function flipOne(cd, val, dur, onDone){
-  const half = Math.max(dur/2, 18);
-  cd.ht.style.transition = `transform ${half}ms ease-in`;
-  cd.ht.style.transform = 'scaleY(0)';
-  cd.ft = setTimeout(()=>{
-    cd.nt.textContent = val;
-    cd.nb.textContent = val;
-    cd.cur = String(val);
-    cd.ht.style.transition = `transform ${half}ms ease-out`;
-    cd.ht.style.transform = 'scaleY(1)';
-    cd.ft = setTimeout(()=>{
-      if(onDone) onDone();
-    }, half);
-  }, half);
+  const half=Math.max(dur/2,18);
+  cd.ht.style.transition=`transform ${half}ms ease-in`;
+  cd.ht.style.transform='scaleY(0)';
+  cd.ft=setTimeout(()=>{
+    cd.nt.textContent=val; cd.nb.textContent=val; cd.cur=String(val);
+    cd.ht.style.transition=`transform ${half}ms ease-out`;
+    cd.ht.style.transform='scaleY(1)';
+    cd.ft=setTimeout(()=>{ if(onDone)onDone(); },half);
+  },half);
 }
 
 function runQueue(cd){
-  if(cd.running || cd.queue.length===0) return;
-  cd.running = true;
-  const {val, dur} = cd.queue.shift();
-  flipOne(cd, val, dur, ()=>{
-    cd.running = false;
-    runQueue(cd);
-  });
+  if(cd.running||cd.queue.length===0) return;
+  cd.running=true;
+  const {val,dur}=cd.queue.shift();
+  flipOne(cd,val,dur,()=>{ cd.running=false; runQueue(cd); });
 }
 
-function flipTo(cd, val, dur){
-  // 清掉舊佇列，只保留最新目標（中途換頁時不累積舊動畫）
-  cd.queue = [{val, dur}];
+function flipTo(cd,val,dur){
+  cd.queue=[{val,dur}];
   if(!cd.running) runQueue(cd);
 }
 
-function rollCell(cd, target){
-  const cur = parseInt(cd.cur)||0;
-  const tgt = parseInt(target);
-  const steps = ((tgt-cur+10)%10)||10;
-  const stepMs = Math.floor(ROLL_MS/steps);
-  const flipDur = Math.min(stepMs*0.75, 120);
-  // 把所有步驟加進佇列，嚴格排隊
-  cd.queue = [];
-  for(let s=1; s<=steps; s++){
-    cd.queue.push({val: String((cur+s)%10), dur: flipDur});
-  }
+function flipTo_cb(cd,val,dur,onDone){
+  cd.queue=[];cd.running=false;clearTimeout(cd.ft);
+  flipOne(cd,val,dur,onDone);
+}
+
+function rollCell(cd,target){
+  const cur=parseInt(cd.cur)||0,tgt=parseInt(target);
+  const steps=((tgt-cur+10)%10)||10,stepMs=Math.floor(ROLL_MS/steps);
+  const flipDur=Math.min(stepMs*0.75,120);
+  cd.queue=[];
+  for(let s=1;s<=steps;s++) cd.queue.push({val:String((cur+s)%10),dur:flipDur});
   if(!cd.running) runQueue(cd);
 }
 
@@ -377,13 +358,11 @@ function rollCell(cd, target){
 function getPage(off){let s='';for(let i=0;i<TOTAL;i++)s+=PI[(off+i)%PI.length];return s;}
 
 function piTick(){
-  if(chiming) return;
+  if(chiming)return;
   piOffset=(piOffset+TOTAL)%PI.length;
-  const nd=getPage(piOffset);
-  lastFlip=Date.now();
+  const nd=getPage(piOffset); lastFlip=Date.now();
   cells.forEach((cd,i)=>rollCell(cd,nd[i]));
-  const pr=document.getElementById('prange');
-  if(pr) pr.textContent=`π digits ${piOffset+1}–${piOffset+TOTAL}`;
+  document.getElementById('prange').textContent=`π digits ${piOffset+1}–${piOffset+TOTAL}`;
 }
 
 function triggerChime(){
@@ -399,7 +378,7 @@ function triggerChime(){
     const cur=parseInt(cd.cur)||0;
     const stepsTo9=9-cur;
     for(let s=1;s<=stepsTo9;s++){
-      setTimeout(()=>flipTo(cd,String(cur+s),STEP_MS*0.85,null),s*STEP_MS);
+      setTimeout(()=>flipTo(cd,String(cur+s),STEP_MS*0.85),s*STEP_MS);
     }
     setTimeout(()=>{
       flipTo_cb(cd,' ',STEP_MS*0.85,()=>{
@@ -434,12 +413,7 @@ function triggerChime(){
         setTimeout(()=>{
           flipTo(cd,nd[i],110);
           back++;
-          if(back===TOTAL){
-          setTimeout(()=>{
-            chiming=false;
-            lastFlip=Date.now();
-          },400);
-        }
+          if(back===TOTAL) setTimeout(()=>{chiming=false;},400);
         },col*25+row*45);
       });
     },10000);
@@ -485,7 +459,9 @@ function checkHour(){
   }
 }
 
-// vis bars already created above
+const visEl=document.getElementById('vis');
+const vbars=[];
+for(let i=0;i<22;i++){const b=document.createElement('div');b.className='vbar';visEl.appendChild(b);vbars.push(b);}
 
 function setupAudio(){
   if(actx)return;
@@ -512,17 +488,16 @@ function playNote(digit,when,dur){
   osc.connect(env); env.connect(mGain); env.connect(revNode);
   osc.start(when); osc.stop(when+dur);
   const bi=stepIdx%22;
-  const _delay=Math.max(0,(when-actx.currentTime)*1000);
+  const _kd=Math.max(0,(when-actx.currentTime)*1000);
   setTimeout(()=>{
-    if(window.pkeys){
+    if(window.pkeys&&window.pkeys.length){
       window.pkeys.forEach((k,i)=>{
         const dist=Math.abs(i-(digit/9*21)|0);
-        k.style.height=dist===0?'30px':dist===1?'20px':dist===2?'11px':'3px';
-        k.style.opacity=dist===0?'0.95':dist===1?'0.55':dist===2?'0.25':'0.08';
-        k.style.background=dist===0?'#fff':dist<=2?'#cce4ff':'#fff';
+        k.style.height=dist===0?'32px':dist===1?'20px':dist===2?'10px':'3px';
+        k.style.opacity=dist===0?'0.95':dist===1?'0.5':dist===2?'0.2':'0.06';
       });
     }
-  },_delay);
+  },_kd);
 }
 
 function schedule(){
@@ -536,13 +511,11 @@ function startMusic(){
   setupAudio();
   actx.resume().then(()=>{
     playing=true;
-    // 從廣播時間軸的正確位置開始
-    stepIdx = getSyncedStepIdx();
-    nxt = actx.currentTime + 0.1;
+    stepIdx=getSyncedStepIdx();
+    nxt=actx.currentTime+0.1;
     schedule();
-    document.getElementById('status').textContent='playing';
-    const sd=document.getElementById('sdot');
-    if(sd) sd.classList.add('on');
+    document.getElementById('status').textContent='π · playing';
+    document.getElementById('status').classList.add('live');
   });
 }
 
@@ -563,38 +536,96 @@ window.addEventListener('load',()=>{
 
 function frame(){
   const now=Date.now(),bpm=getBPM();
-  const pfEl=document.getElementById('pf');
-  const bpmEl=document.getElementById('bpmv');
-  const moodEl=document.getElementById('mood');
-  const clkEl=document.getElementById('clk');
-  if(pfEl) pfEl.style.width=Math.min((now-lastFlip)/CYCLE*100,100)+'%';
-  if(bpmEl) bpmEl.textContent=bpm+' BPM';
-  if(moodEl) moodEl.textContent=getMood(bpm);
-  if(clkEl){
-    const d=new Date();
-    clkEl.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
-  }
+  document.getElementById('pf').style.width=Math.min((now-lastFlip)/CYCLE*100,100)+'%';
+  document.getElementById('bpmv').textContent=bpm+' BPM';
+  document.getElementById('mood').textContent=getMood(bpm);
+  const d=new Date();
+  document.getElementById('clk').textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
   requestAnimationFrame(frame);
 }
 
-// 確保 DOM 完全載入後才啟動
-window.addEventListener('load', function() {
-  // 重置所有狀態
-  chiming = false;
-  lastHour = -1;
-  piOffset = 0;
-  lastFlip = Date.now();
+// ── π digits 分段載入：5段各500k位，共250萬位 ──
+const SEGMENT_SIZE = 500000;
+let PI = "";
+let PI_SEGMENT = 0;
 
-  // 啟動翻牌
+function getSegmentIndex(){
+  const elapsed = Math.max(0, Date.now() - new Date('2026-03-14T01:59:26Z').getTime());
+  const digitsUsed = Math.floor(elapsed / 3600000 * 70000);
+  return Math.floor(digitsUsed / SEGMENT_SIZE) % 5;
+}
+
+function getDigitOffset(){
+  const elapsed = Math.max(0, Date.now() - new Date('2026-03-14T01:59:26Z').getTime());
+  const digitsUsed = Math.floor(elapsed / 3600000 * 70000);
+  return digitsUsed % SEGMENT_SIZE;
+}
+
+async function loadSegment(idx){
+  try{
+    const r = await fetch(`pi_${idx}.txt`);
+    if(!r.ok) throw new Error('http '+r.status);
+    PI = (await r.text()).trim();
+    PI_SEGMENT = idx;
+    console.log(`π segment ${idx} loaded: ${PI.length} digits`);
+    return true;
+  }catch(e){
+    console.warn('fetch failed:', e.message);
+    return false;
+  }
+}
+
+async function initPi(){
+  const seg = getSegmentIndex();
+  const ok = await loadSegment(seg);
+  if(!ok){
+    // fallback
+    PI = "14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196444288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491";
+    PI_SEGMENT = 0;
+    console.warn('Using fallback (500 digits)');
+  }
+
+  // 設定偏移
+  const offset = ok ? getDigitOffset() : 0;
+  piOffset = offset - (offset % 88);
+  if(piOffset >= PI.length - TOTAL) piOffset = 0;
+  stepIdx = getSyncedStepIdx();
+
+  // 初始化格子顯示
+  const startPage = getPage(piOffset);
+  for(let i=0;i<TOTAL;i++){
+    const cd=cells[i], v=startPage[i]||'0';
+    cd.nt.textContent=v; cd.nb.textContent=v; cd.cur=v;
+  }
+
+  // 啟動
   setInterval(piTick, CYCLE);
   setInterval(checkHour, 1000);
-
-  // 立刻執行第一次翻牌（不要等 CYCLE 才開始）
-  setTimeout(piTick, 500);
-
-  // 啟動時鐘
   frame();
-});
+
+  // 音樂
+  setTimeout(()=>{
+    try{
+      startMusic();
+      if(actx&&actx.state==='suspended'){
+        document.getElementById('status').textContent='click to start';
+        document.addEventListener('click',function r(){startMusic();document.removeEventListener('click',r);},{once:true});
+      }
+    }catch(e){
+      document.getElementById('status').textContent='click to start';
+      document.addEventListener('click',function r(){startMusic();document.removeEventListener('click',r);},{once:true});
+    }
+  },400);
+
+  // 每6小時換下一段
+  setInterval(async()=>{
+    const next=(PI_SEGMENT+1)%5;
+    if(await loadSegment(next)){ piOffset=0; stepIdx=0; }
+  }, 6*3600*1000);
+}
+
+window.addEventListener('load',()=>{ initPi(); });
+
 </script>
 </body>
 </html>
