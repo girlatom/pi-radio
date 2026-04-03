@@ -281,15 +281,19 @@ setInterval(drawBpmCurve,60000);
 
 // π overlay 主程式
 
-// π overlay 主程式
-
 // ── 廣播時間軸 ──
 const BROADCAST_EPOCH = new Date('2026-03-14T01:59:26Z').getTime();
 const BPM_SYNC = 72;
 
+// FIX 1: PI 宣告移到最前面，讓 getSyncedStepIdx 可以安全使用
+const SEGMENT_SIZE = 500000;
+let PI = "";
+let PI_SEGMENT = 0;
+
 function getSyncedStepIdx(){
   const elapsed=Date.now()-BROADCAST_EPOCH;
   if(elapsed<0) return 0;
+  if(!PI.length) return 0;
   return Math.floor(elapsed/(60000/BPM_SYNC))%PI.length;
 }
 
@@ -306,10 +310,11 @@ const cells=[];
 for(let i=0;i<TOTAL;i++){
   const cell=document.createElement('div'); cell.className='cell';
   const ht=document.createElement('div'); ht.className='half-top';
-  const nt=document.createElement('span'); nt.className='n'; nt.textContent=PI[i%PI.length];
+  // FIX 2: PI 尚未載入，先填 "0"，initPi() 完成後再更新
+  const nt=document.createElement('span'); nt.className='n'; nt.textContent='0';
   ht.appendChild(nt);
   const hb=document.createElement('div'); hb.className='half-bot';
-  const nb=document.createElement('span'); nb.className='n'; nb.textContent=PI[i%PI.length];
+  const nb=document.createElement('span'); nb.className='n'; nb.textContent='0';
   hb.appendChild(nb);
   cell.appendChild(ht); cell.appendChild(hb);
   gridEl.appendChild(cell);
@@ -459,9 +464,8 @@ function checkHour(){
   }
 }
 
-const visEl=document.getElementById('vis');
+// FIX 3: 移除對不存在的 id="vis" 元素的操作（vbars 陣列保留但不掛 DOM）
 const vbars=[];
-for(let i=0;i<22;i++){const b=document.createElement('div');b.className='vbar';visEl.appendChild(b);vbars.push(b);}
 
 function setupAudio(){
   if(actx)return;
@@ -487,7 +491,6 @@ function playNote(digit,when,dur){
   env.gain.exponentialRampToValueAtTime(0.001,when+dur*0.88);
   osc.connect(env); env.connect(mGain); env.connect(revNode);
   osc.start(when); osc.stop(when+dur);
-  const bi=stepIdx%22;
   const _kd=Math.max(0,(when-actx.currentTime)*1000);
   setTimeout(()=>{
     if(window.pkeys&&window.pkeys.length){
@@ -515,39 +518,21 @@ function startMusic(){
     nxt=actx.currentTime+0.1;
     schedule();
     document.getElementById('status').textContent='π · playing';
-    document.getElementById('status').classList.add('live');
+    document.getElementById('sdot').classList.add('on');
   });
 }
 
-window.addEventListener('load',()=>{
-  setTimeout(()=>{
-    try{
-      startMusic();
-      if(actx&&actx.state==='suspended'){
-        document.getElementById('status').textContent='click to start';
-        document.addEventListener('click',function r(){startMusic();document.removeEventListener('click',r);},{once:true});
-      }
-    }catch(e){
-      document.getElementById('status').textContent='click to start';
-      document.addEventListener('click',function r(){startMusic();document.removeEventListener('click',r);},{once:true});
-    }
-  },500);
-});
-
 function frame(){
   const now=Date.now(),bpm=getBPM();
-  document.getElementById('pf').style.width=Math.min((now-lastFlip)/CYCLE*100,100)+'%';
+  // FIX 4: id="pf" 不存在，安全取用
+  const pfEl=document.getElementById('pf');
+  if(pfEl) pfEl.style.width=Math.min((now-lastFlip)/CYCLE*100,100)+'%';
   document.getElementById('bpmv').textContent=bpm+' BPM';
   document.getElementById('mood').textContent=getMood(bpm);
   const d=new Date();
   document.getElementById('clk').textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
   requestAnimationFrame(frame);
 }
-
-// ── π digits 分段載入：5段各500k位，共250萬位 ──
-const SEGMENT_SIZE = 500000;
-let PI = "";
-let PI_SEGMENT = 0;
 
 function getSegmentIndex(){
   const elapsed = Math.max(0, Date.now() - new Date('2026-03-14T01:59:26Z').getTime());
