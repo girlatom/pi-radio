@@ -138,9 +138,9 @@ canvas#bpm-curve{width:100%;height:100%;display:block}
 <div id="dynamic-bg-container" class="space-bg-container"></div>
 
 <script>
-  // 因為網頁是在 VPS 本地的 Firefox 裡面跑的，直接讀取 localhost 的圖片 API
-  const API_URL = 'http://localhost:8080/api/images';
-  const IMAGE_BASE_URL = 'http://localhost:8080/';
+// 請改成 127.0.0.1，這能繞過 90% 的瀏覽器本地安全策略
+const API_URL = 'http://127.0.0.1:8080/api/images';
+const IMAGE_BASE_URL = 'http://127.0.0.1:8080/';
 
   async function initDynamicBackground() {
     try {
