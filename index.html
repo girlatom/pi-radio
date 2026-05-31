@@ -135,12 +135,106 @@ canvas#bpm-curve{width:100%;height:100%;display:block}
 </head>
 <body>
 
-<div class="earth-bg">
-  <iframe id="bgf"
-    src="https://www.youtube.com/embed/fO9e9jnhYK8?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1"
-    allow="autoplay; encrypted-media; fullscreen" allowfullscreen>
-  </iframe>
-</div>
+<div id="dynamic-bg-container" class="space-bg-container"></div>
+
+<script>
+  // 因為網頁是在 VPS 本地的 Firefox 裡面跑的，直接讀取 localhost 的圖片 API
+  const API_URL = 'http://localhost:8080/api/images';
+  const IMAGE_BASE_URL = 'http://localhost:8080/';
+
+  async function initDynamicBackground() {
+    try {
+      // 1. 向 VPS 的輕量伺服器索取最新的圖片檔名清單
+      const response = await fetch(API_URL);
+      const images = await response.json();
+      
+      if (!images || images.length === 0) {
+        console.error("⚠️ VPS 圖片夾（nasa_images）裡沒有照片！");
+        return;
+      }
+
+      const container = document.getElementById('dynamic-bg-container');
+      const totalImages = images.length;
+      const durationPerImage = 15; // 每張照片輪播 15 秒
+      const totalCycleTime = totalImages * durationPerImage; // 總循環時間
+
+      // 2. 隨機打散圖片順序（Shuffle），讓每次開直播的初始畫面都不同
+      images.sort(() => Math.random() - 0.5);
+
+      // 3. 動態建立 CSS 樣式表，精準計算每張圖的淡入淡出時間軸
+      const style = document.createElement('style');
+      let cssRules = `
+        .space-bg-container { 
+          position: fixed; 
+          top: 0; 
+          left: 0; 
+          width: 100vw; 
+          height: 100vh; 
+          z-index: -100; /* 確保它絕對不會擋到你的翻頁鐘 */
+          background: #000; 
+          overflow: hidden; 
+        }
+        .space-bg { 
+          position: absolute; 
+          top: 0; 
+          left: 0; 
+          width: 100%; 
+          height: 100%; 
+          background-size: cover; 
+          background-position: center; 
+          opacity: 0; 
+        }
+      `;
+
+      // 4. 用 JavaScript 自動幫每一張照片鋪設舞台
+      images.forEach((imgName, index) => {
+        const div = document.createElement('div');
+        div.className = `space-bg slide-${index}`;
+        div.style.backgroundImage = `url('${IMAGE_BASE_URL}${imgName}')`;
+        container.appendChild(div);
+
+        const delay = index * durationPerImage;
+        
+        // 幫每張圖量身打造專屬的 CSS 動畫延遲
+        cssRules += `
+          .slide-${index} {
+            animation: 
+              breathEffect ${totalCycleTime}s ease-in-out infinite,
+              fadeCarousel-${index} ${totalCycleTime}s infinite;
+            animation-delay: 0s, ${delay}s;
+          }
+
+          @keyframes fadeCarousel-${index} {
+            0% { opacity: 0; }
+            ${(delay / totalCycleTime) * 100}% { opacity: 0; }
+            ${((delay + 2) / totalCycleTime) * 100}% { opacity: 1; } /* 2秒絲滑淡入 */
+            ${((delay + durationPerImage) / totalCycleTime) * 100}% { opacity: 1; }
+            ${((delay + durationPerImage + 2) / totalCycleTime) * 100}% { opacity: 0; } /* 2秒絲滑淡出 */
+            100% { opacity: 0; }
+          }
+        `;
+      });
+
+      // 🌟 電影感微幅放大縮小特效（仿 FFmpeg zoompan 效果）
+      cssRules += `
+        @keyframes breathEffect {
+          0%, 100% { transform: scale(1.02); }
+          50% { transform: scale(1.10); } /* 緩慢微幅放大到 1.1 倍 */
+        }
+      `;
+
+      style.innerHTML = cssRules;
+      document.head.appendChild(style);
+      console.log(`🚀 自動化同步成功！已載入 ${totalImages} 張雲端深空美照。`);
+
+    } catch (error) {
+      console.error("❌ 無法從 VPS 獲取圖片清單:", error);
+    }
+  }
+
+  // 網頁準備好就立刻點火
+  window.addEventListener('DOMContentLoaded', initDynamicBackground);
+</script>
 
 <div class="pi-layer" id="pilayer">
   <div class="board-wrap">
